@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ürün Yönetimi - Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; display: inline-block;}
+        .nav-link { margin-left: 20px; color: #007bff; text-decoration: none; font-weight: bold; }
+        .nav-link:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; background-color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 20px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: #fff; }
+        tr:hover { background-color: #f1f1f1; }
+        .btn { display: inline-block; padding: 8px 12px; background-color: #17a2b8; color: #fff; text-decoration: none; border-radius: 4px; font-size: 14px; border: none; cursor: pointer;}
+        .btn:hover { background-color: #138496; }
+        .btn-sync { background-color: #ffc107; color: #000; margin-bottom: 15px; float: right;}
+        .btn-sync:hover { background-color: #e0a800; }
+        .price-input { padding: 5px; width: 80px; }
+        .product-img { width: 40px; height: 40px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; display: block; margin: 0 auto; }
+        .upload-form { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+        .upload-input { font-size: 10px; width: 130px; }
+    </style>
+</head>
+<body>
+
+    <h1>Katalog & Ürün Yönetimi</h1>
+    <a href="/" class="nav-link">🏠 Dashboard</a>
+    <a href="/settings" class="nav-link">⚙️ Ayarlar</a>
+    <p>Pazaryerinden çekilen tüm ürünleriniz (Fiyat güncellemeleri anında API'ye iletilir).</p>
+
+    {% if error_msg %}
+    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+        <strong>HATA:</strong> {{ error_msg }}
+    </div>
+    {% endif %}
+
+    <form action="/api/sync_products" method="POST" style="display:inline; float: right;">
+        <select name="platform_name" style="padding: 8px; border-radius: 4px; margin-right: 5px;">
+            <option value="Trendyol">Trendyol</option>
+            <option value="Hepsiburada">Hepsiburada</option>
+        </select>
+        <button type="submit" class="btn btn-sync" style="float: none; margin-bottom: 0;">🔄 Ürünleri Çek</button>
+    </form>
+    
+    <div style="clear: both; margin-bottom: 15px;"></div>
+
+    <div style="background-color: #fff; padding: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+        <h3 style="margin-top: 0;">Manuel Ürün Ekle</h3>
+        <form action="/api/add_product" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="barcode" placeholder="Barkod" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <input type="text" name="name" placeholder="Ürün Adı" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; flex-grow: 1;">
+            <input type="number" name="stock" placeholder="Stok" value="0" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px;">
+            <input type="number" step="0.01" name="price" placeholder="Fiyat" value="0.00" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
+            <input type="text" name="platform" placeholder="Platform (Örn: KendiSitem)" value="Manuel" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            <button type="submit" class="btn" style="background-color: #28a745;">+ Ekle</button>
+        </form>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Görsel</th>
+                <th>Barkod</th>
+                <th>Ürün Adı</th>
+                <th>Platform</th>
+                <th>Stok</th>
+                <th>Fiyat (TL)</th>
+                <th>İşlem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td style="text-align: center;">
+                    <img src="/static/images/{{ product.barcode }}.jpg" class="product-img" onerror="this.onerror=null; this.src='{{ product.image_url if product.image_url else 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI5IiBmaWxsPSIjOTk5IiBkeT0iLjNlbSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+WW9rPC90ZXh0Pjwvc3ZnPg==' }}';">
+                </td>
+                <td>
+                    <strong>{{ product.barcode }}</strong><br>
+                    <form action="/api/upload_image" method="POST" enctype="multipart/form-data" class="upload-form">
+                        <input type="hidden" name="barcode" value="{{ product.barcode }}">
+                        <input type="file" name="file" class="upload-input" accept="image/*" required>
+                        <button type="submit" class="btn" style="padding: 2px 5px; font-size: 10px;">Yükle</button>
+                    </form>
+                </td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.platform }}</td>
+                <td>{{ product.stock }}</td>
+                <td>
+                    <form action="/api/update_price" method="POST" style="display:inline; margin:0;">
+                        <input type="hidden" name="db_id" value="{{ product.id }}">
+                        <input type="number" step="0.01" name="new_price" class="price-input" value="{{ product.price }}">
+                        <button type="submit" class="btn" style="padding: 4px 8px; margin-left: 5px;">Güncelle</button>
+                    </form>
+                </td>
+                <td><span style="color: green; font-size: 12px;">Aktif</span></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align: center;">Sistemde henüz ürün yok. Sağ üstten ürünleri çekiniz.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

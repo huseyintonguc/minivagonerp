@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sipariş Yönetimi - Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #28a745;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .platform-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .platform-trendyol { background-color: #f27a1a; }
+        .platform-hepsiburada { background-color: #ff6000; }
+    </style>
+</head>
+<body>
+
+    <h1>Siparişler Listesi</h1>
+    <div style="float:right; margin-bottom: 10px;">
+        <a href="/settings" class="btn" style="background-color: #6c757d; margin-right: 5px;">⚙️ Ayarlar</a>
+        <a href="/products" class="btn" style="background-color: #17a2b8;">📦 Ürün Yönetimine Git</a>
+    </div>
+    <p>Tüm platformlardan gelen siparişler burada listelenir.</p>
+
+    {% if error_msg %}
+    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+        <strong>HATA:</strong> {{ error_msg }}
+    </div>
+    {% endif %}
+
+    <!-- Filtreler ve Butonlar -->
+    <div style="background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <form action="/" method="GET" style="display: flex; gap: 10px; align-items: center;">
+                <label style="font-weight: bold; font-size: 14px;">Tarih Filtresi:</label>
+                <input type="date" name="start_date" value="{{ start_date if start_date else '' }}" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                <span>-</span>
+                <input type="date" name="end_date" value="{{ end_date if end_date else '' }}" style="padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                <button type="submit" class="btn" style="background-color: #007bff; padding: 6px 12px;">Filtrele</button>
+                <a href="/?start_date=&end_date=" class="btn" style="background-color: #6c757d; padding: 6px 12px;">Tüm Siparişler</a>
+                <a href="/" class="btn" style="background-color: #17a2b8; padding: 6px 12px;">Son 3 Gün</a>
+            </form>
+        </div>
+
+        <form action="/api/sync_orders" method="POST" style="margin: 0;">
+            <select name="platform_name" style="padding: 6px; border-radius: 4px; margin-right: 5px;">
+                <option value="Trendyol">Trendyol</option>
+                <option value="Hepsiburada">Hepsiburada</option>
+            </select>
+            <button type="submit" class="btn" style="background-color: #ffc107; color: #000; padding: 6px 12px;">🔄 Sipariş Çek</button>
+        </form>
+    </div>
+
+    <!-- Sipariş Listeleri -->
+    <div style="display: flex; gap: 20px;">
+        <!-- YENİ SİPARİŞLER -->
+        <div style="flex: 2; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <h2 style="margin: 0; color: #dc3545;">Yeni Bekleyen Siparişler</h2>
+                <button type="button" class="btn bulkPrintBtnClass" style="background-color: #28a745; padding: 6px 12px;">🖨️ Seçilenleri Toplu Yazdır</button>
+            </div>
+            
+            <table style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" id="selectAll"></th>
+                        <th>Sipariş No</th>
+                        <th>Platform</th>
+                        <th>Müşteri</th>
+                        <th>Sipariş Durumu</th>
+                        <th>Barkod (Kargo)</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders if not order.is_printed %}
+                    <tr>
+                        <td style="text-align: center;">
+                            <input type="checkbox" class="order-checkbox new-order-checkbox" value="{{ order.platform_order_id }}">
+                        </td>
+                        <td><strong>{{ order.platform_order_id }}</strong></td>
+                        <td>
+                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% endif %}">
+                                {{ order.platform }}
+                            </span>
+                        </td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>
+                            {% if order.status == 'Cancelled' %}
+                                <span style="color: #dc3545; font-weight: bold; font-size: 14px;">İptal Edildi</span>
+                            {% elif order.status == 'Delivered' %}
+                                <span style="color: #28a745; font-weight: bold; font-size: 14px;">Teslim Edildi</span>
+                            {% elif order.status == 'Shipped' %}
+                                <span style="color: #17a2b8; font-weight: bold; font-size: 14px;">Kargoda</span>
+                            {% else %}
+                                <span style="color: #6c757d; font-weight: bold; font-size: 14px;">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- jsBarcode ile ekranda küçük barkod basıyoruz -->
+                            <svg class="list-barcode" data-value="{{ order.cargo_tracking_number if order.cargo_tracking_number else order.platform_order_id }}"></svg>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="/invoice/{{ order.platform_order_id }}" class="btn" style="font-size: 12px; padding: 5px 10px;" target="_blank">Fatura Al</a>
+                                <form action="/api/delete_order/{{ order.platform_order_id }}" method="POST" style="margin: 0;" onsubmit="return confirm('Bu siparişi silmek istediğinize emin misiniz?');">
+                                    <button type="submit" class="btn" style="background-color: #dc3545; font-size: 12px; padding: 5px 10px; border: none; cursor: pointer;">Sil</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #777;">Bekleyen yeni sipariş yok.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- YAZDIRILANLAR -->
+        <div style="flex: 1; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <h2 style="margin: 0; color: #28a745;">Yazdırılan Siparişler</h2>
+                <button type="button" class="btn bulkPrintBtnClass" style="background-color: #6c757d; padding: 6px 12px; font-size: 12px;">🖨️ Tekrar Yazdır</button>
+            </div>
+            
+            <table style="margin-top: 10px;">
+                <thead>
+                    <tr>
+                        <th style="width: 30px; text-align: center;"><input type="checkbox" id="selectAllPrinted"></th>
+                        <th>Sipariş No</th>
+                        <th>Platform</th>
+                        <th>Müşteri</th>
+                        <th>Sipariş Durumu</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders if order.is_printed %}
+                    <tr>
+                        <td style="text-align: center;">
+                            <input type="checkbox" class="order-checkbox printed-order-checkbox" value="{{ order.platform_order_id }}">
+                        </td>
+                        <td><strong>{{ order.platform_order_id }}</strong></td>
+                        <td>
+                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% endif %}">
+                                {{ order.platform }}
+                            </span>
+                        </td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>
+                            {% if order.status == 'Cancelled' %}
+                                <span style="color: #dc3545; font-weight: bold; font-size: 14px;">İptal Edildi</span>
+                            {% elif order.status == 'Delivered' %}
+                                <span style="color: #28a745; font-weight: bold; font-size: 14px;">Teslim Edildi</span>
+                            {% elif order.status == 'Shipped' %}
+                                <span style="color: #17a2b8; font-weight: bold; font-size: 14px;">Kargoda</span>
+                            {% else %}
+                                <span style="color: #6c757d; font-weight: bold; font-size: 14px;">{{ order.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="/invoice/{{ order.platform_order_id }}" class="btn" style="background-color: #6c757d; font-size: 12px; padding: 5px 10px;" target="_blank">Tekrar Al</a>
+                                <form action="/api/delete_order/{{ order.platform_order_id }}" method="POST" style="margin: 0;" onsubmit="return confirm('Bu siparişi silmek istediğinize emin misiniz?');">
+                                    <button type="submit" class="btn" style="background-color: #dc3545; font-size: 12px; padding: 5px 10px; border: none; cursor: pointer;">Sil</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #777;">Henüz yazdırılmış sipariş yok.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script>
+        // Listede barkodları çizme
+        window.addEventListener('load', function() {
+            var barcodes = document.querySelectorAll('.list-barcode');
+            barcodes.forEach(function(svg) {
+                var value = svg.getAttribute('data-value');
+                if(value && value !== 'None') {
+                    JsBarcode(svg, value, {
+                        format: "CODE128",
+                        lineColor: "#000",
+                        width: 1,
+                        height: 30,
+                        displayValue: true,
+                        fontSize: 10,
+                        margin: 0
+                    });
+                }
+            });
+        });
+
+        // Tümünü Seç / Kaldır (Yeni Siparişler)
+        var selectAll = document.getElementById('selectAll');
+        if(selectAll) {
+            selectAll.addEventListener('change', function() {
+                var checkboxes = document.querySelectorAll('.new-order-checkbox');
+                checkboxes.forEach(function(cb) {
+                    cb.checked = selectAll.checked;
+                });
+            });
+        }
+
+        // Tümünü Seç / Kaldır (Yazdırılan Siparişler)
+        var selectAllPrinted = document.getElementById('selectAllPrinted');
+        if(selectAllPrinted) {
+            selectAllPrinted.addEventListener('change', function() {
+                var checkboxes = document.querySelectorAll('.printed-order-checkbox');
+                checkboxes.forEach(function(cb) {
+                    cb.checked = selectAllPrinted.checked;
+                });
+            });
+        }
+
+        // Toplu Yazdır Butonu Yönlendirmesi (Ortak)
+        var bulkPrintBtns = document.querySelectorAll('.bulkPrintBtnClass');
+        bulkPrintBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var checkboxes = document.querySelectorAll('.order-checkbox:checked');
+                if(checkboxes.length === 0) {
+                    alert("Lütfen yazdırmak için en az 1 sipariş seçin.");
+                    return;
+                }
+                
+                var selectedIds = [];
+                checkboxes.forEach(function(cb) {
+                    selectedIds.push(cb.value);
+                });
+                
+                var idsStr = selectedIds.join(',');
+                window.open('/bulk_invoice?order_ids=' + idsStr, '_blank');
+            });
+        });
+    </script>
+</body>
+</html>
