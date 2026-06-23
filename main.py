@@ -183,7 +183,7 @@ def save_settings(
     platform_name: str = Form(...),
     supplier_id: str = Form(...),
     api_key: str = Form(...),
-    api_secret: str = Form(...),
+    api_secret: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """Pazaryeri API ayarlarını veritabanına kaydeder."""

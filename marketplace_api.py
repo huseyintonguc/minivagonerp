@@ -28,7 +28,7 @@ class MarketplaceClient:
 
     def fetch_all_products(self):
         """Pazaryerinden tüm ürünleri çeker."""
-        if not self.supplier_id or not self.api_key or not self.api_secret:
+        if not self.supplier_id or not self.api_key or (not self.api_secret and self.platform != "Hepsiburada"):
             return {"error": "API Ayarları Eksik, lütfen Ayarlar sayfasından giriniz.", "content": []}
             
         if self.platform == "Trendyol":
@@ -77,7 +77,7 @@ class MarketplaceClient:
 
     def fetch_all_orders(self):
         """Pazaryerinden bekleyen/tüm siparişleri çeker."""
-        if not self.supplier_id or not self.api_key or not self.api_secret:
+        if not self.supplier_id or not self.api_key or (not self.api_secret and self.platform != "Hepsiburada"):
             return {"error": "API Ayarları Eksik, lütfen Ayarlar sayfasından giriniz.", "content": []}
             
         if self.platform == "Trendyol":

@@ -36,7 +36,7 @@
         <form action="/api/save_settings" method="POST">
             <div class="form-group">
                 <label>Pazaryeri Seçin</label>
-                <select name="platform_name" required>
+                <select name="platform_name" id="platformSelect" required onchange="updateFormFields()">
                     <option value="Trendyol">Trendyol</option>
                     <option value="Hepsiburada">Hepsiburada</option>
                     <option value="Ciceksepeti">Çiçeksepeti</option>
@@ -45,19 +45,44 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Satıcı ID (Supplier ID)</label>
-                <input type="text" name="supplier_id" placeholder="123456" required>
+                <label id="supplierLabel">Satıcı ID (Supplier ID)</label>
+                <input type="text" name="supplier_id" id="supplierInput" placeholder="123456" required>
             </div>
             <div class="form-group">
-                <label>API Key</label>
-                <input type="text" name="api_key" placeholder="API Anahtarınız" required>
+                <label id="apiKeyLabel">API Key</label>
+                <input type="text" name="api_key" id="apiKeyInput" placeholder="API Anahtarınız" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="api-secret-group">
                 <label>API Secret</label>
-                <input type="password" name="api_secret" placeholder="API Şifreniz" required>
+                <input type="password" name="api_secret" id="apiSecretInput" placeholder="API Şifreniz" required>
             </div>
             <button type="submit" class="btn">💾 Ayarları Kaydet</button>
         </form>
+
+        <script>
+            function updateFormFields() {
+                var platform = document.getElementById("platformSelect").value;
+                var supplierLabel = document.getElementById("supplierLabel");
+                var apiKeyLabel = document.getElementById("apiKeyLabel");
+                var secretGroup = document.getElementById("api-secret-group");
+                var secretInput = document.getElementById("apiSecretInput");
+
+                if (platform === "Hepsiburada") {
+                    supplierLabel.innerText = "Merchant ID";
+                    apiKeyLabel.innerText = "Servis Anahtarı";
+                    secretGroup.style.display = "none";
+                    secretInput.removeAttribute("required");
+                } else {
+                    supplierLabel.innerText = "Satıcı ID (Supplier ID)";
+                    apiKeyLabel.innerText = "API Key";
+                    secretGroup.style.display = "block";
+                    secretInput.setAttribute("required", "required");
+                }
+            }
+
+            // Sayfa yüklendiğinde çalıştır
+            document.addEventListener('DOMContentLoaded', updateFormFields);
+        </script>
 
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
         
