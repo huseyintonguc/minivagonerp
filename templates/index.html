@@ -56,6 +56,9 @@
         }
         .platform-trendyol { background-color: #f27a1a; }
         .platform-hepsiburada { background-color: #ff6000; }
+        .platform-ciceksepeti { background-color: #007bff; }
+        .platform-amazon { background-color: #ff9900; }
+        .platform-temu { background-color: #ff4500; }
     </style>
 </head>
 <body>
@@ -91,6 +94,9 @@
             <select name="platform_name" style="padding: 6px; border-radius: 4px; margin-right: 5px;">
                 <option value="Trendyol">Trendyol</option>
                 <option value="Hepsiburada">Hepsiburada</option>
+                <option value="Ciceksepeti">Çiçeksepeti</option>
+                <option value="Amazon">Amazon</option>
+                <option value="Temu">Temu</option>
             </select>
             <button type="submit" class="btn" style="background-color: #ffc107; color: #000; padding: 6px 12px;">🔄 Sipariş Çek</button>
         </form>
@@ -125,7 +131,7 @@
                         </td>
                         <td><strong>{{ order.platform_order_id }}</strong></td>
                         <td>
-                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% endif %}">
+                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% elif order.platform == 'Ciceksepeti' %} platform-ciceksepeti {% elif order.platform == 'Amazon' %} platform-amazon {% elif order.platform == 'Temu' %} platform-temu {% endif %}">
                                 {{ order.platform }}
                             </span>
                         </td>
@@ -189,7 +195,7 @@
                         </td>
                         <td><strong>{{ order.platform_order_id }}</strong></td>
                         <td>
-                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% endif %}">
+                            <span class="platform-badge {% if order.platform == 'Trendyol' %} platform-trendyol {% elif order.platform == 'Hepsiburada' %} platform-hepsiburada {% elif order.platform == 'Ciceksepeti' %} platform-ciceksepeti {% elif order.platform == 'Amazon' %} platform-amazon {% elif order.platform == 'Temu' %} platform-temu {% endif %}">
                                 {{ order.platform }}
                             </span>
                         </td>
