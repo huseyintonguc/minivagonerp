@@ -107,7 +107,7 @@ class MarketplaceClient:
                         },
                         "cargoTrackingNumber": f"CRG123456",
                         "lines": [
-                            {"name": "Test Ürün", "quantity": 1, "price": 150.0}
+                            {"productName": f"Test {self.platform} Ürünü", "quantity": 1, "price": 150.0, "barcode": "8690000000000"}
                         ]
                     }
                 ]
