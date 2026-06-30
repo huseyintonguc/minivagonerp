@@ -55,12 +55,9 @@
             <tbody id="items-body-{{ order.platform_order_id }}">
                 <script>
                     (function() {
-                        var itemsJsonStr = '{{ order.items_json | safe }}';
-                        var items = [];
-                        if (itemsJsonStr && itemsJsonStr !== 'None') {
-                            try { items = JSON.parse(itemsJsonStr); } catch (e) { console.error("JSON Parse Hatası:", e); }
-                        }
-                        
+                        var items = {{ order.items_json | safe if order.items_json and order.items_json != 'None' else '[]' }};
+                        if (!items || !Array.isArray(items)) { items = []; }
+
                         var html = "";
                         if (items.length > 0) {
                             items.forEach(function(item) {
@@ -68,10 +65,13 @@
                                 var localImgPath = "/static/images/" + item.barcode + ".jpg";
                                 var imgHtml = "<img src='" + localImgPath + "' onerror=\"this.onerror=null; this.src='" + apiImgUrl + "';\" class='product-img'>";
 
+                                var pName = item.productName || item.name || item.title || "Bilinmeyen Ürün";
+                                var pBarcode = item.barcode || item.merchantSku || "Yok";
+
                                 html += "<tr>";
                                 html += "<td style='text-align:center; font-weight:bold; font-size:14px;'>" + item.quantity + "</td>";
                                 html += "<td style='text-align:center;'>" + imgHtml + "</td>";
-                                html += "<td>" + item.productName + "<br><small style='color:#555;'>Barkod: " + item.barcode + "</small></td>";
+                                html += "<td>" + pName + "<br><small style='color:#555;'>Barkod: " + pBarcode + "</small></td>";
                                 html += "</tr>";
                             });
                         } else {
@@ -90,7 +90,7 @@
                 window.addEventListener('load', function() {
                     var trackingNumber = "{{ order.cargo_tracking_number }}";
                     if (!trackingNumber || trackingNumber === 'None') {
-                        trackingNumber = "{{ order.platform_order_id }}"; 
+                        trackingNumber = "{{ order.platform_order_id }}";
                     }
                     JsBarcode("#barcode-{{ order.platform_order_id }}", trackingNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 60, displayValue: true, fontSize: 14 });
                 });

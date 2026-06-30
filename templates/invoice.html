@@ -51,11 +51,8 @@
             </thead>
             <tbody>
                 <script>
-                    var itemsJsonStr = '{{ order.items_json | safe }}';
-                    var items = [];
-                    if (itemsJsonStr && itemsJsonStr !== 'None') {
-                        try { items = JSON.parse(itemsJsonStr); } catch (e) { console.error("JSON Parse Hatası:", e); }
-                    }
+                    var items = {{ order.items_json | safe if order.items_json and order.items_json != 'None' else '[]' }};
+                    if (!items || !Array.isArray(items)) { items = []; }
                     if (items.length > 0) {
                         items.forEach(function(item) {
                             var apiImgUrl = item.productImageUrl || item.productImage || item.imageUrl || "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjZWVlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSI5IiBmaWxsPSIjOTk5IiBkeT0iLjNlbSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+WW9rPC90ZXh0Pjwvc3ZnPg==";
